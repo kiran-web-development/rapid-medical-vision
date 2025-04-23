@@ -45,7 +45,11 @@ const Index = () => {
       <Navbar />
       {/* Logo with 3D animation */}
       <div className="flex items-center justify-center my-4">
-        <AnimatedImage3D src="/placeholder.svg" alt="MedScanAI Logo" className="w-20 h-20 shadow-lg" />
+        <AnimatedImage3D
+          src="/lovable-uploads/1a6d6eaa-847f-4923-93f4-cc899e5f4183.png"
+          alt="AIHealth Logo"
+          className="w-60 h-24 shadow-lg"
+        />
       </div>
       <HeroSection />
       <div className="container max-w-3xl mx-auto flex flex-col gap-10 animate-fade-in">
