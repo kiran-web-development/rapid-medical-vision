@@ -1,5 +1,6 @@
 
 import { Shield, Heart, Brain, Thermometer, ZoomIn } from "lucide-react";
+import AnimatedImage3D from "./AnimatedImage3D";
 
 type Props = {
   label: string;
@@ -48,8 +49,8 @@ const DiagnosisResult = ({
 
       <div className="flex flex-col gap-2 items-center md:w-1/2">
         <div className="w-40 h-40 relative rounded-xl overflow-hidden border border-gray-200 shadow pulse">
-          <img src={imageUrl} alt="Scan" className="object-contain w-full h-full bg-gray-50" />
-          <img src={annotationUrl} alt="AI Annotation" className="absolute inset-0 w-full h-full opacity-60 pointer-events-none" />
+          <AnimatedImage3D src={imageUrl} alt="Scan" className="absolute inset-0 w-full h-full" />
+          <img src={annotationUrl} alt="AI Annotation" className="absolute inset-0 w-full h-full opacity-60 pointer-events-none rounded" />
         </div>
         <span className="text-xs text-gray-400 mt-1">Grad-CAM / saliency heatmap (simulated)</span>
       </div>
