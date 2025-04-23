@@ -7,8 +7,16 @@ import HowItWorks from "@/components/HowItWorks";
 import Footer from "@/components/Footer";
 import { useState } from "react";
 
-// Demo: Simulate an AI-powered diagnosis result
-const DEMO_RESULT = {
+// Step 1: Define a stricter type for the result
+type DiagnosisResultType = {
+  label: string;
+  probability: number;
+  urgency: "Low" | "Medium" | "High";
+  annotationUrl: string;
+};
+
+// Step 2: Use the type for your result constant
+const DEMO_RESULT: DiagnosisResultType = {
   label: "Lung Nodule",
   probability: 0.93,
   urgency: "High", // Low, Medium, High
@@ -16,7 +24,8 @@ const DEMO_RESULT = {
 };
 
 const Index = () => {
-  const [analysisResult, setAnalysisResult] = useState<null | typeof DEMO_RESULT>(null);
+  // Step 3: Use the correct type for the analysis result state
+  const [analysisResult, setAnalysisResult] = useState<DiagnosisResultType | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Simulate file analysis (mocked delay, then set dummy result)
