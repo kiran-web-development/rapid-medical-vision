@@ -1,10 +1,11 @@
-
 import HeroSection from "@/components/HeroSection";
 import ImageUploader from "@/components/ImageUploader";
 import DiagnosisResult from "@/components/DiagnosisResult";
 import FeaturesGrid from "@/components/FeaturesGrid";
 import HowItWorks from "@/components/HowItWorks";
 import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
+import AnimatedImage3D from "@/components/AnimatedImage3D";
 import { useState } from "react";
 
 // Step 1: Define a stricter type for the result
@@ -19,7 +20,7 @@ type DiagnosisResultType = {
 const DEMO_RESULT: DiagnosisResultType = {
   label: "Lung Nodule",
   probability: 0.93,
-  urgency: "High", // Low, Medium, High
+  urgency: "High", // Fix: strictly "Low" | "Medium" | "High"
   annotationUrl: "/placeholder.svg", // Placeholder for Grad-CAM heatmap
 };
 
@@ -41,6 +42,11 @@ const Index = () => {
 
   return (
     <div className="bg-gradient-to-b from-white via-blue-50 to-purple-50 min-h-screen flex flex-col">
+      <Navbar />
+      {/* Logo with 3D animation */}
+      <div className="flex items-center justify-center my-4">
+        <AnimatedImage3D src="/placeholder.svg" alt="MedScanAI Logo" className="w-20 h-20 shadow-lg" />
+      </div>
       <HeroSection />
       <div className="container max-w-3xl mx-auto flex flex-col gap-10 animate-fade-in">
         <ImageUploader onAnalyze={handleAnalyze} />
