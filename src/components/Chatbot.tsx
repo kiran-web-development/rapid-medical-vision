@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, X, Send } from 'lucide-react';
+import { MessageSquare, X, Send, FileX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
@@ -14,9 +14,23 @@ type Message = {
 
 const INITIAL_MESSAGE: Message = {
   id: '1',
-  text: 'Hello! How can I assist you today?',
+  text: 'Hello! How can I assist you with your healthcare-related questions today?',
   sender: 'bot',
   timestamp: new Date()
+};
+
+// Healthcare keyword detection
+const HEALTHCARE_KEYWORDS = [
+  'doctor', 'medicine', 'hospital', 'symptom', 'pain', 'treatment', 'diagnosis', 
+  'therapy', 'healthcare', 'medical', 'disease', 'condition', 'health', 
+  'prescription', 'drug', 'nurse', 'patient', 'clinic', 'surgery', 'covid', 
+  'vaccine', 'flu', 'fever', 'cancer', 'heart', 'blood', 'lung', 'brain', 'mri',
+  'ct scan', 'x-ray', 'checkup', 'appointment'
+];
+
+const isHealthcareQuery = (query: string): boolean => {
+  const lowerQuery = query.toLowerCase();
+  return HEALTHCARE_KEYWORDS.some(keyword => lowerQuery.includes(keyword.toLowerCase()));
 };
 
 const Chatbot = () => {
@@ -76,21 +90,33 @@ const Chatbot = () => {
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
 
+    // Check if query is healthcare-related
+    const isHealthcare = isHealthcareQuery(inputValue);
+    
     // Simulate bot response after a short delay
     setTimeout(() => {
-      const botResponses = [
-        "I'm here to help with any questions about AI Health.",
-        "Would you like to know more about our services?",
-        "Is there anything specific you'd like to learn about our platform?",
-        "I can help you navigate through our diagnostic tools.",
-        "Feel free to ask me anything about our medical AI technology."
-      ];
+      let botResponse: string;
       
-      const randomResponse = botResponses[Math.floor(Math.random() * botResponses.length)];
+      if (isHealthcare) {
+        // Healthcare-related responses
+        const healthcareResponses = [
+          "I'm here to help with your health-related questions. Remember, I'm an AI assistant, not a doctor.",
+          "That's an important health concern. While I can provide general information, please consult with a medical professional for specific advice.",
+          "Based on medical literature, there are several approaches to managing this condition. Would you like to know more?",
+          "I can help explain medical terms and concepts. What specifically would you like to know about this topic?",
+          "Healthcare is complex, and individual cases vary. I can provide general information, but your doctor can give you personalized advice.",
+          "AI Health is designed to help analyze medical images and provide preliminary insights, but final diagnosis always requires a healthcare professional."
+        ];
+        
+        botResponse = healthcareResponses[Math.floor(Math.random() * healthcareResponses.length)];
+      } else {
+        // Non-healthcare response
+        botResponse = "I'm specialized in healthcare-related questions. Could you please ask me something about health, medical conditions, or our AI Health diagnostic tools?";
+      }
       
       const botMessage: Message = {
         id: Date.now().toString(),
-        text: randomResponse,
+        text: botResponse,
         sender: 'bot',
         timestamp: new Date()
       };
@@ -164,7 +190,7 @@ const Chatbot = () => {
             <div className="flex gap-2">
               <Textarea
                 className="min-h-10 max-h-24 resize-none flex-1"
-                placeholder="Type your message..."
+                placeholder="Ask about health & medical topics..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}

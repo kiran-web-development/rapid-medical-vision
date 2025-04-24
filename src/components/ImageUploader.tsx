@@ -1,12 +1,20 @@
 
 import { useRef, useState } from "react";
-import { FileImage, Camera } from "lucide-react";
+import { FileImage, Hospital, FileX } from "lucide-react";
+import { toast } from "sonner";
 
 type Props = {
-  onAnalyze: (file: File | null, previewUrl: string | null) => void;
+  onAnalyze: (file: File | null, previewUrl: string | null, isHospitalReport: boolean) => void;
 };
 
 const SUPPORTED_FORMATS = [".dcm", ".jpg", ".jpeg", ".png"];
+
+// Keywords that might indicate a medical/hospital report
+const MEDICAL_KEYWORDS = [
+  "report", "medical", "hospital", "clinic", "patient", "diagnosis", 
+  "doctor", "radiology", "xray", "x-ray", "ct scan", "mri", "blood", 
+  "test", "results", "pathology", "ultrasound", "ecg", "ekg"
+];
 
 const ImageUploader = ({ onAnalyze }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -15,6 +23,14 @@ const ImageUploader = ({ onAnalyze }: Props) => {
   const [fileName, setFileName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isHospitalReport, setIsHospitalReport] = useState(true); // Default to true until we analyze
+
+  // Simple detection if the file might be hospital-related based on filename
+  const detectHospitalReport = (fileName: string): boolean => {
+    const lowerFileName = fileName.toLowerCase();
+    // Check if any medical keywords are in the filename
+    return MEDICAL_KEYWORDS.some(keyword => lowerFileName.includes(keyword.toLowerCase()));
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -27,6 +43,9 @@ const ImageUploader = ({ onAnalyze }: Props) => {
       return;
     }
 
+    // Detect if it might be a hospital report
+    const potentiallyMedical = detectHospitalReport(f.name);
+    setIsHospitalReport(potentiallyMedical);
     setFile(f);
     setFileName(f.name);
 
@@ -44,8 +63,14 @@ const ImageUploader = ({ onAnalyze }: Props) => {
 
   const handleAnalyze = () => {
     if (!file) return;
+    
+    if (!isHospitalReport) {
+      toast.error("Please upload a medical or hospital-related image for analysis.");
+      return;
+    }
+    
     setLoading(true);
-    onAnalyze(file, previewUrl);
+    onAnalyze(file, previewUrl, isHospitalReport);
     setTimeout(() => setLoading(false), 1500); // keep in sync with parent demo
   };
 
@@ -54,6 +79,7 @@ const ImageUploader = ({ onAnalyze }: Props) => {
     setFileName("");
     setPreviewUrl(null);
     setError(null);
+    setIsHospitalReport(true);
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -85,19 +111,37 @@ const ImageUploader = ({ onAnalyze }: Props) => {
             )}
             <div>
               <div className="font-semibold text-sm">{fileName}</div>
+              <div className="flex items-center gap-1 text-sm mt-1">
+                {isHospitalReport ? (
+                  <span className="text-green-600 flex items-center gap-1">
+                    <Hospital className="w-4 h-4" /> Medical document detected
+                  </span>
+                ) : (
+                  <span className="text-amber-600 flex items-center gap-1">
+                    <FileX className="w-4 h-4" /> Not a medical document
+                  </span>
+                )}
+              </div>
               <button className="text-xs text-blue-600 underline mt-1" onClick={handleClear}>
                 Remove
               </button>
             </div>
           </div>
           <button
-            className="bg-primary hover:bg-purple-700 text-white font-bold px-4 py-2 mt-4 rounded shadow-md transition-all focus:outline-none"
+            className={`${
+              isHospitalReport ? "bg-primary hover:bg-purple-700" : "bg-gray-400"
+            } text-white font-bold px-4 py-2 mt-4 rounded shadow-md transition-all focus:outline-none`}
             onClick={handleAnalyze}
-            disabled={loading}
+            disabled={loading || !isHospitalReport}
           >
-            {loading ?
-              <span className="animate-pulse flex items-center gap-1"><Camera className="w-4 h-4" />Analyzing...</span>
-              : <span className="flex items-center gap-1"><Camera className="w-4 h-4" />Analyze</span>}
+            {loading ? (
+              <span className="animate-pulse flex items-center gap-1"><Hospital className="w-4 h-4" />Analyzing...</span>
+            ) : (
+              <span className="flex items-center gap-1">
+                <Hospital className="w-4 h-4" />
+                {isHospitalReport ? "Analyze" : "Please upload a medical image"}
+              </span>
+            )}
           </button>
         </div>
       )}
