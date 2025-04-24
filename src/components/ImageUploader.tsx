@@ -4,7 +4,7 @@ import { FileImage, Hospital, FileX } from "lucide-react";
 import { toast } from "sonner";
 
 type Props = {
-  onAnalyze: (file: File | null, previewUrl: string | null, isHospitalReport: boolean) => void;
+  onAnalyze: (file: File | null, previewUrl: string | null, isHospitalReport: boolean, extractedText?: string) => void;
 };
 
 const SUPPORTED_FORMATS = [".dcm", ".jpg", ".jpeg", ".png"];
@@ -16,6 +16,32 @@ const MEDICAL_KEYWORDS = [
   "test", "results", "pathology", "ultrasound", "ecg", "ekg"
 ];
 
+// Simulate OCR extraction from image
+const extractTextFromImage = async (file: File): Promise<string> => {
+  // In a real app, we would use a proper OCR library
+  // This is a simulation for demonstration purposes
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // Simulated extracted text based on filename
+      const filename = file.name.toLowerCase();
+      let simulatedText = "";
+      
+      if (filename.includes("lung")) {
+        simulatedText = "Lung scan shows possible nodules in right lower lobe. Recommend follow-up in 3 months. Patient exhibits mild symptoms including occasional cough.";
+      } else if (filename.includes("heart") || filename.includes("cardiac")) {
+        simulatedText = "Cardiac evaluation shows normal rhythm, slight elevation in markers. Blood pressure: 140/85. Cholesterol levels slightly elevated at 210mg/dL.";
+      } else if (filename.includes("brain")) {
+        simulatedText = "Brain MRI shows no acute abnormalities. Minor signal changes in white matter may indicate early vascular changes. Patient reports occasional headaches.";
+      } else if (filename.includes("blood") || filename.includes("lab")) {
+        simulatedText = "Blood panel results: WBC: 7.2, RBC: 4.5, Hemoglobin: 13.8, Platelets: 250. Glucose levels elevated at 110mg/dL.";
+      } else {
+        simulatedText = "Medical report shows all parameters within normal ranges. Follow-up recommended in 12 months. Patient reports feeling generally well.";
+      }
+      resolve(simulatedText);
+    }, 500);
+  });
+};
+
 const ImageUploader = ({ onAnalyze }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -24,6 +50,8 @@ const ImageUploader = ({ onAnalyze }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isHospitalReport, setIsHospitalReport] = useState(true); // Default to true until we analyze
+  const [extractedText, setExtractedText] = useState<string>("");
+  const [isExtracting, setIsExtracting] = useState(false);
 
   // Simple detection if the file might be hospital-related based on filename
   const detectHospitalReport = (fileName: string): boolean => {
@@ -32,8 +60,9 @@ const ImageUploader = ({ onAnalyze }: Props) => {
     return MEDICAL_KEYWORDS.some(keyword => lowerFileName.includes(keyword.toLowerCase()));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
+    setExtractedText("");
     const f = e.target.files?.[0];
     if (!f) return;
 
@@ -55,6 +84,20 @@ const ImageUploader = ({ onAnalyze }: Props) => {
         setPreviewUrl(ev.target?.result as string);
       };
       reader.readAsDataURL(f);
+      
+      // Extract text from the image
+      if (potentiallyMedical) {
+        setIsExtracting(true);
+        try {
+          const text = await extractTextFromImage(f);
+          setExtractedText(text);
+        } catch (err) {
+          console.error("Error extracting text:", err);
+          setError("Failed to extract text from image.");
+        } finally {
+          setIsExtracting(false);
+        }
+      }
     } else {
       // DICOM: use placeholder
       setPreviewUrl("/placeholder.svg");
@@ -70,7 +113,7 @@ const ImageUploader = ({ onAnalyze }: Props) => {
     }
     
     setLoading(true);
-    onAnalyze(file, previewUrl, isHospitalReport);
+    onAnalyze(file, previewUrl, isHospitalReport, extractedText);
     setTimeout(() => setLoading(false), 1500); // keep in sync with parent demo
   };
 
@@ -80,6 +123,7 @@ const ImageUploader = ({ onAnalyze }: Props) => {
     setPreviewUrl(null);
     setError(null);
     setIsHospitalReport(true);
+    setExtractedText("");
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -122,11 +166,22 @@ const ImageUploader = ({ onAnalyze }: Props) => {
                   </span>
                 )}
               </div>
+              {isExtracting && (
+                <div className="text-sm text-blue-500 mt-1">
+                  <span className="animate-pulse">Extracting text from image...</span>
+                </div>
+              )}
               <button className="text-xs text-blue-600 underline mt-1" onClick={handleClear}>
                 Remove
               </button>
             </div>
           </div>
+          {extractedText && (
+            <div className="w-full mt-2 border border-gray-200 rounded p-2 bg-gray-50">
+              <div className="text-xs text-gray-500 mb-1">Extracted text:</div>
+              <div className="text-sm text-gray-700">{extractedText}</div>
+            </div>
+          )}
           <button
             className={`${
               isHospitalReport ? "bg-primary hover:bg-purple-700" : "bg-gray-400"
